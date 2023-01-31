@@ -1,7 +1,6 @@
-from aiogram.types import AllowedUpdates
 from aiogram.utils import executor
 
-from database.CRUD import init_db, close_db, read_data
+from database.CRUD import init_db, close_db
 from telegram_API.core import *
 
 init_db()

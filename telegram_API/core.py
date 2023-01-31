@@ -3,8 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ContentTypes
 
-
-from database.CRUD import create_data, read_data
+from database.CRUD import read_data
 from settings import BotSettings
 from telegram_API import keyboards
 from telegram_API.texts import greeting_text, help_text
@@ -29,6 +28,9 @@ async def cmd_start(message: types.Message):
 
 @dp.callback_query_handler(text=['Да', 'Нет'])
 async def send_random_value(call: types.CallbackQuery):
+    """
+    Обработка кнопок "Да" и "Нет"
+    """
     await call.message.edit_reply_markup(reply_markup=None)
     if call.data == 'Да':
         await call.message.answer(text=f'Отлично, давай я тебе расскажу обо всем...\n{help_text}')
@@ -47,26 +49,43 @@ async def cmd_help(message: types.Message):
 
 @dp.message_handler(commands=["history"])
 async def cmd_history(message: types.Message):
-    # create_data(message.from_user.username, message.from_user.first_name, message.text)
+    """
+    Выводит список всех записей в базе данных
+    :param message: сообщение
+    """
     read_data_from_DB = read_data(message.from_user.first_name, 3)
     for i in read_data_from_DB:
         await message.answer(text=i, parse_mode=None)
 
 
-@dp.message_handler(commands=['geo'])
-async def process_geo_command(message: types.Message):
-    create_data(message.from_user.username, message.from_user.first_name, message.text)
-    await message.reply("Запрашиваем контакт и геолокацию", reply_markup=keyboards.request_geo)
+@dp.message_handler(commands=['mylocation'])
+async def process_location_command(message: types.Message):
+    """
+    Обработка команды 'mylocation'
+    :param message: сообщение
+    """
+    await message.reply("Запрашиваем геолокацию", reply_markup=keyboards.request_geo)
 
 
 @dp.message_handler(content_types=ContentTypes.LOCATION)
-async def echo(message: types.Message):
-    await message.answer(f'Широта: {message.location.latitude}\nДолгота: {message.location.longitude}')
+async def user_location(message: types.Message):
+    """
+    Получаем данные геолокации
+    :param message: геолокация
+    """
+    await message.answer(f'Широта: {message.location.latitude}\nДолгота: {message.location.longitude}',
+                         reply_markup=keyboards.ReplyKeyboardRemove())
     print(f'Широта: {message.location.latitude}\nДолгота: {message.location.longitude}')
 
 
-@dp.message_handler()
-async def echo(message: types.Message):
-    # create_data(message.from_user.username, message.from_user.first_name, message.text)
-    await message.answer(message.text)
-    print(message)
+# @dp.message_handler(content_types=ContentTypes.CONTACT)
+# async def user_location(message: types.Message):
+#     await message.answer(f'Телефон: {message.contact.phone_number}', reply_markup=keyboards.ReplyKeyboardRemove())
+#     print(f'Телефон: {message.contact.phone_number}')
+
+
+# @dp.message_handler()
+# async def echo(message: types.Message):
+#     # create_data(message.from_user.username, message.from_user.first_name, message.text)
+#     await message.answer(message.text)
+#     print(message)
