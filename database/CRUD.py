@@ -4,11 +4,18 @@ from database.models import db, Data
 
 
 def init_db():
+    """
+    Инициализация базы данных
+    """
     db.connect()
     db.create_tables([Data])
 
 
 def close_db():
+    """
+    Закрытие базы данных
+    :return:
+    """
     db.close()
 
 
