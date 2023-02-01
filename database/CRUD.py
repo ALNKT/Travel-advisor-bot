@@ -1,6 +1,6 @@
 import datetime
 
-from database.models import db, Data
+from database.models import db, Users, RequestsHotels, RequestsRestaurants
 
 
 def init_db():
@@ -8,7 +8,7 @@ def init_db():
     Инициализация базы данных
     """
     db.connect()
-    db.create_tables([Data])
+    db.create_tables([Users, RequestsHotels, RequestsRestaurants])
 
 
 def close_db():
@@ -19,29 +19,51 @@ def close_db():
     db.close()
 
 
-def create_data(username, first_name, data):
+def check_user(first_name: str):
     """
-    Занесение данных в базу
-    :param username: username пользователя
-    :param first_name: мя пользователя
-    :param data: данные для занесения в базу
-    :return:
-    """
-    date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-    data = Data(date=date, username=username, first_name=first_name, data=data)
-    data.save()
-
-
-def read_data(first_name, count=1):
-    """
-    Получение данных из базы
+    Проверка наличия пользователя в базе данных
     :param first_name: имя пользователя
-    :param count: количество записей
+    :return: bool
     """
-    data = Data.select().where(Data.first_name == first_name).order_by(Data.id.desc()).limit(count)
-    for i in data:
-        yield i.data
+    if Users.select(Users.first_name).where(Users.first_name == first_name):
+        return True
+    return False
 
 
-if __name__ == "__main__":
-    read_data(first_name='Alex', count=3)
+def record_user(username: str, first_name: str):
+    """
+    Занесение пользователя в базу данных. Предварительно проверяем его наличие в таблице
+    :param username: username пользователя
+    :param first_name: имя пользователя
+    """
+    if not check_user(first_name):
+        date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        data_command = Users(date=date, username=username, first_name=first_name)
+        data_command.save()
+
+
+def record_request(first_name, request, table):
+    """
+    Запись данных в таблицу с запросами пользователя
+    :param table: таблица, в которую записывать данные
+    :param first_name: имя пользователя
+    :param request: запрос пользователя
+    """
+    user_id = next(iter(Users.select(Users.id).where(Users.first_name == first_name)))
+    table(user_id=user_id, request=request).save()
+
+
+# def read_data(first_name, count=1):
+#     """
+#     Получение данных из базы
+#     :param first_name: имя пользователя
+#     :param count: количество записей
+#     """
+#     data = Data.select().where(Data.first_name == first_name).order_by(Data.id.desc()).limit(count)
+#     for i in data:
+#         yield i.data
+
+# if __name__ == "__main__":
+#     user_id = next(iter(Users.select(Users.id).where(Users.first_name == 'Alex')))
+#     print(user_id)
+#     Requests(user_id=user_id, request='sdff').save()
