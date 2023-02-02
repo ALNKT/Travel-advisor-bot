@@ -1,6 +1,6 @@
 import datetime
 
-from database.models import db, Users, RequestsHotels, RequestsRestaurants
+from database.models import db, Users, RequestsHotels, RequestsRestaurants, RequestsAttractions
 
 
 def init_db():
@@ -8,7 +8,7 @@ def init_db():
     Инициализация базы данных
     """
     db.connect()
-    db.create_tables([Users, RequestsHotels, RequestsRestaurants])
+    db.create_tables([Users, RequestsHotels, RequestsRestaurants, RequestsAttractions])
 
 
 def close_db():
@@ -42,15 +42,16 @@ def record_user(username: str, first_name: str):
         data_command.save()
 
 
-def record_request(first_name, request, table):
+def record_request(first_name, request, table, date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")):
     """
     Запись данных в таблицу с запросами пользователя
+    :param date: текущая дата
     :param table: таблица, в которую записывать данные
     :param first_name: имя пользователя
     :param request: запрос пользователя
     """
     user_id = next(iter(Users.select(Users.id).where(Users.first_name == first_name)))
-    table(user_id=user_id, request=request).save()
+    table(date=date, user_id=user_id, request=request).save()
 
 
 # def read_data(first_name, count=1):
@@ -66,4 +67,4 @@ def record_request(first_name, request, table):
 # if __name__ == "__main__":
 #     user_id = next(iter(Users.select(Users.id).where(Users.first_name == 'Alex')))
 #     print(user_id)
-#     Requests(user_id=user_id, request='sdff').save()
+#     Requests(user_id=user_id, request='abc').save()

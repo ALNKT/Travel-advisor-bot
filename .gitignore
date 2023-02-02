@@ -2,3 +2,4 @@
 .env
 /database/travel_advisor.db
 *log
+*json

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.contrib.fsm_storage.files import JSONStorage
 
 from settings import BotSettings
 
@@ -13,11 +13,9 @@ logging.basicConfig(level=logging.INFO, filemode='w',
                     datefmt=datetime.strftime(datetime.now(), '%d.%m.%Y %H:%M:%S'),
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+storage = JSONStorage('JSONStorage.json')
 bot = Bot(token=bot_token)
-dp = Dispatcher(bot, storage=MemoryStorage())
-
-
-
+dp = Dispatcher(bot, storage=storage)
 
 # @dp.message_handler(commands=["history"])
 # async def cmd_history(message: types.Message):
@@ -26,8 +24,8 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 #     :param message: сообщение
 #     """
 #     read_data_from_DB = read_data(message.from_user.first_name, 3)
-#     for i in read_data_from_DB:
-#         await message.answer(text=i, parse_mode=None)
+#     for j in read_data_from_DB:
+#         await message.answer(text=j, parse_mode=None)
 
 #
 # @dp.message_handler(commands=['mylocation'])
@@ -38,43 +36,9 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 #     """
 #     await message.reply("Давай определим твоё местоположение.", reply_markup=keyboards.request_geo)
 #
-#
-# @dp.message_handler(content_types=ContentTypes.LOCATION)
-# async def processing_user_location(message: types.Message):
-#     """
-#     Получаем данные геолокации
-#     :param message: геолокация
-#     """
-#     await message.reply(text=None, reply_markup=keyboards.ReplyKeyboardRemove())
-#     coordinates = (message.location.latitude, message.location.longitude)
-#     return coordinates
-
-
-# @dp.message_handler(content_types=ContentTypes.CONTACT)
-# async def user_location(message: types.Message):
-#     await message.answer(f'Телефон: {message.contact.phone_number}', reply_markup=keyboards.ReplyKeyboardRemove())
-#     print(f'Телефон: {message.contact.phone_number}')
-
 
 # @dp.message_handler()
 # async def echo(message: types.Message):
 #     # create_data(message.from_user.username, message.from_user.first_name, message.text)
 #     await message.answer(message.text)
 #     print(message)
-
-# @dp.message_handler(commands='1')
-# async def echo(message: types.Message):
-#     with open('restaurants.json', 'r', encoding='utf-8') as file:
-#         data = json.load(file)
-#         photo = data['data'][0]['photo']['images']['medium']['url']
-#         name = data['data'][0]['name']
-#         distance = data['data'][0]['distance_string']
-#         phone = data['data'][0]['phone']
-#         address = data['data'][0]['address']
-#     await bot.send_photo(chat_id=message.chat.id, photo=photo)
-#     await message.answer(text=f'Название ресторана: {name}\n'
-#                               f'Адрес: {address}\n'
-#                               f'Телефон: {phone}\n'
-#                               f'Удалённость: {distance}\n')
-
-    # await message.answer(res, parse_mode='HTML')

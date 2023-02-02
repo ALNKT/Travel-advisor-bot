@@ -45,13 +45,13 @@ class RequestsHotels(BaseModel):
     Таблица для хранения запросов по отелям
 
     Attributes:
+        date (datetime): дата запроса
         user_id (int): id пользователя
         request (string): запрос пользователя
-        answer (string): ответ от сервера
     """
+    date = DateTimeField(null=True)
     user_id = IntegerField(null=True)
     request = TextField(null=True)
-    answer = TextField(null=True)
 
 
 class RequestsRestaurants(BaseModel):
@@ -59,10 +59,11 @@ class RequestsRestaurants(BaseModel):
     Таблица для хранения запросов по ресторанам
 
     Attributes:
+        date (datetime): дата запроса
         user_id (int): id пользователя
         request (string): запрос пользователя
-        answer (string): ответ от сервера
     """
+    date = DateTimeField(null=True)
     user_id = IntegerField(null=True)
     request = TextField(null=True)
 
@@ -72,10 +73,10 @@ class RequestsAttractions(BaseModel):
     Таблица для хранения запросов по достопримечательностям
 
     Attributes:
+        date (datetime): дата запроса
         user_id (int): id пользователя
         request (string): запрос пользователя
-        answer (string): ответ от сервера
     """
+    date = DateTimeField(null=True)
     user_id = IntegerField(null=True)
     request = TextField(null=True)
-    answer = TextField(null=True)

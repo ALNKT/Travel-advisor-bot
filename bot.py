@@ -1,7 +1,7 @@
 from aiogram.utils import executor
 
 from database.CRUD import init_db, close_db
-from telegram_API.handlers.main_handlers import *
+from telegram_API.handlers.common import *
 from telegram_API.handlers.restaurants import *
 
 init_db()
