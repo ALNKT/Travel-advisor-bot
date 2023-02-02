@@ -112,7 +112,7 @@ async def count_results(message: types.Message, state: FSMContext):
 
 async def confirmed_data(message: types.Message, state: FSMContext):
     """
-    Подтверждение данных от пользователя или отмена действия
+    Обрабатываем данные от пользователя или отмена действия
     :param message: сообщение от пользователя
     :param state: статус
     """

@@ -23,7 +23,6 @@ async def cmd_start(message: types.Message):
     await message.answer(text_message, reply_markup=keyboards.hello_keyboard)  # пользователь выбирает кнопку (Да, Нет)
 
 
-# @dp.callback_query_handler(text=['Да', 'Нет'])
 async def processing_button_yes_no(call: types.CallbackQuery):
     """
     Обработка кнопок "Да" и "Нет"
@@ -60,7 +59,7 @@ def register_callbacks(dps: Dispatcher):
     Регистрация коллбэков
     :param dps: диспетчер
     """
-    dps.register_callback_query_handler(processing_button_yes_no, state="*")
+    dps.register_callback_query_handler(processing_button_yes_no, Text(['Да', 'Нет']), state="*")
 
 
 register_handlers_common(dp)

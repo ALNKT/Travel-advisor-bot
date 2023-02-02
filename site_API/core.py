@@ -27,9 +27,9 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
             tmp_restaurant.append({'Расстояние': i_restaurant.get('distance_string')})
             tmp_restaurant.append({'Адрес': i_restaurant.get('address')})
             tmp_restaurant.append({'Телефон': i_restaurant.get('phone')})
-            tmp_restaurant.append({'Сайт': i_restaurant.get('web_url')})
             tmp_restaurant.append({'Фото':
                     i_restaurant.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
+            tmp_restaurant.append({'Сайт': i_restaurant.get('web_url')})
         return restaurants
     return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.'
 
