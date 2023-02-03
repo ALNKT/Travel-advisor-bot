@@ -101,9 +101,12 @@ def read_data_of_restaurants(first_name, count=1):
             order_by(RequestsRestaurants.id.desc()).limit(count)
         for i_data in data[::-1]:
             i_data = json.loads(i_data.request)
-            for i_result in i_data:
-                data_of_restaurant, coordinates = i_result
-                yield data_of_restaurant, coordinates
+            if isinstance(i_data, str):
+                yield i_data, None
+            else:
+                for i_result in i_data:
+                    data_of_restaurant, coordinates = i_result
+                    yield data_of_restaurant, coordinates
 
 
 # if __name__ == "__main__":
