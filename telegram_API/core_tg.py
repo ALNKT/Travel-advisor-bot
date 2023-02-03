@@ -8,8 +8,8 @@ from settings import BotSettings
 
 
 bot_token = BotSettings().bot_token.get_secret_value()
-# filename='bot.log',
-logging.basicConfig(level=logging.INFO, filemode='w',
+
+logging.basicConfig(level=logging.INFO, filename='bot.log', filemode='w',
                     datefmt=datetime.strftime(datetime.now(), '%d.%m.%Y %H:%M:%S'),
                     format='%(asctime)s - %(levelname)s - %(message)s')
 

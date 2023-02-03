@@ -49,7 +49,6 @@ def record_user_db(username: str, first_name: str):
     :param first_name: имя пользователя
     """
     if not check_user_db(first_name):
-        first_name = json.dumps(first_name, ensure_ascii=False)
         date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         data_command = Users(date=date, username=username, first_name=first_name)
         data_command.save()
@@ -107,9 +106,3 @@ def read_data_of_restaurants(first_name, count=1):
                 for i_result in i_data:
                     data_of_restaurant, coordinates = i_result
                     yield data_of_restaurant, coordinates
-
-
-# if __name__ == "__main__":
-#     # db.connect()
-#     print(check_city_db('Pattaya'))
-#     # print(check_user('Alex'))

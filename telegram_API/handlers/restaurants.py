@@ -1,7 +1,5 @@
 from aiogram.types import ContentTypes, ReplyKeyboardRemove
-
-from site_API.core import nearest_restaurants, search_restaurants
-
+from site_API.restaurants import nearest_restaurants, search_restaurants
 from telegram_API.handlers.common import *
 
 

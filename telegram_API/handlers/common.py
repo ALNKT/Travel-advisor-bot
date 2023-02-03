@@ -100,6 +100,14 @@ async def cmd_help(message: types.Message):
     await message.answer(help_text)
 
 
+async def cmd_location(message: types.Message):
+    """
+    Отображает текущую геопозицию пользователя
+    :param message: сообщение
+    """
+    await message.answer('Показать геопозицию?', reply_markup=keyboards.request_geo)
+
+
 def register_handlers_common(dps: Dispatcher):
     """
     Регистрируем общие обработчики
@@ -110,6 +118,7 @@ def register_handlers_common(dps: Dispatcher):
     dps.register_message_handler(cmd_cancel, Text(equals="отмена", ignore_case=True), state="*")
     dps.register_message_handler(cmd_cancel, commands="cancel", state="*")
     dps.register_message_handler(cmd_history, commands="history", state="*")
+    dps.register_message_handler(cmd_location, commands="mylocation", state="*")
 
 
 def register_callbacks(dps: Dispatcher):
