@@ -30,6 +30,10 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
             tmp_restaurant.append({'Фото':
                     i_restaurant.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
             tmp_restaurant.append({'Сайт': i_restaurant.get('web_url')})
+            if i_restaurant.get('latitude') and i_restaurant.get('longitude'):
+                tmp_restaurant.append({'Координаты': (i_restaurant.get('latitude'), i_restaurant.get('longitude'))})
+            else:
+                tmp_restaurant.append({'Координаты': None})
         return restaurants
     return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.'
 
@@ -40,19 +44,22 @@ def output_restaurants(restaurants: Dict) -> Dict:
     :param restaurants: данные по ресторанам
     """
     for i_restaurant, i_data in restaurants.items():
+        coordinates = None
         if i_restaurant is not None:
             data_of_restaurant = f'Ресторан: {i_restaurant}\n'
         else:
             data_of_restaurant = f'Ресторан: Нет названия\n'
         for j_dict in i_data:
-            data = {key: value for key, value in j_dict.items() if value is not None and len(value) > 0}
+            data = {key: value for key, value in j_dict.items() if value is not None and len(value) > 0 and key != 'Координаты'}
             if j_dict.get('Кухня'):
                 cuisine = [i_cuisine['name'] for i_cuisine in j_dict.get('Кухня')]
                 data['Кухня'] = ', '.join(cuisine)
             if len(data) > 0:
                 for key, value in data.items():
                     data_of_restaurant += f'{key}: {value}\n'
-        yield data_of_restaurant
+            if j_dict.get('Координаты'):
+                coordinates = j_dict.get('Координаты')
+        yield data_of_restaurant, coordinates
 
 
 X_RapidAPI_Key = SiteApiSettings().X_RapidAPI_Key.get_secret_value()
@@ -77,11 +84,10 @@ def nearest_restaurants(first_name: str, coordinates: tuple, distance_search: in
     querystring = {"latitude": coordinates[0], "longitude": coordinates[1], "limit": count, "currency": "RUB",
                    "distance": distance_search, "open_now": "false", "lunit": "km", "lang": "ru_RU"}
     response = requests.request("GET", url, headers=headers, params=querystring).json()
-
     result_response = get_restaurants(response)
     record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
     if isinstance(result_response, str):
-        yield result_response
+        yield result_response, None
     else:
         for i_date in output_restaurants(result_response):
             yield i_date

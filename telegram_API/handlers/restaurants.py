@@ -125,8 +125,13 @@ async def confirmed_data(message: types.Message, state: FSMContext):
         await message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.', reply_markup=ReplyKeyboardRemove())
         results = nearest_restaurants(first_name=message.from_user.first_name, coordinates=coordinates,
                                       count=count_res, distance_search=distance_res)
-        for i_data in results:
-            await message.answer(text=i_data, parse_mode='HTML')
+        for n, i_data in enumerate(results):
+            restaurant_data = i_data[0]
+            restaurant_coordinates = i_data[1]
+            await message.answer(text=f'<u><b>Результат №{n + 1}</b></u>\n{restaurant_data}', parse_mode='HTML')
+            if restaurant_coordinates is not None:
+                await message.answer_location(restaurant_coordinates[0], restaurant_coordinates[1])
+
     else:
         city = user_data['city_for_search']
         count_res = user_data['count_results']
