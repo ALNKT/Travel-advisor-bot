@@ -1,4 +1,3 @@
-from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import ContentTypes, ReplyKeyboardRemove
 
 from site_API.core import nearest_restaurants, search_restaurants

@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from database.CRUD import record_user_db, read_data_of_restaurants
 from telegram_API import keyboards
-from telegram_API.core_tg import dp, bot
+from telegram_API.core_tg import dp
 from telegram_API.texts import greeting_text, help_text
 
 

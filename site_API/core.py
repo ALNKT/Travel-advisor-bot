@@ -1,4 +1,3 @@
-import json
 from typing import Dict, Union, List
 
 import requests
@@ -126,8 +125,12 @@ def search_restaurants(first_name: str, city: str, count: int):
         response = requests.request("GET", url, headers=headers, params=querystring)
         if response.status_code == 200:
             response = response.json()
-            location_city = (response['data'][0]['result_object']['location_id'],
-                             response['data'][0]['result_object']['name'])
+            if response['data'][0]['result_type'] == 'geos':
+                location_city = (response['data'][0]['result_object']['location_id'],
+                                 response['data'][0]['result_object']['name'])
+            else:
+                location_city = (response['data'][0]['result_object']['ancestors'][0]['location_id'],
+                                 response['data'][0]['result_object']['ancestors'][0]['name'])
             record_location_city(location_city=location_city)
             location_id = location_city[0]
         else:
@@ -169,8 +172,6 @@ def search_restaurants(first_name: str, city: str, count: int):
 #         str_data = data['data'][0]['name']
 #     with open('res.json', 'r', encoding='utf-8') as file:
 #         response = json.load(file)
-
-
 
 #     response = 1
 #     if response:
