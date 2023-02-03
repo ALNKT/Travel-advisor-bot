@@ -1,8 +1,9 @@
+import json
 from typing import Dict, Union, List
 
 import requests
 
-from database.CRUD import record_request
+from database.CRUD import record_request, record_location_city, read_location_city_from_db
 from database.models import RequestsRestaurants
 from settings import SiteApiSettings
 
@@ -16,6 +17,7 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
     """
     if len(data['data']) > 0:
         restaurants = {}
+        location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
         for i_restaurant in data['data']:
             tmp_restaurant = restaurants[i_restaurant.get('name')] = []
             if not i_restaurant.get('is_closed'):
@@ -34,15 +36,17 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
                 tmp_restaurant.append({'Координаты': (i_restaurant.get('latitude'), i_restaurant.get('longitude'))})
             else:
                 tmp_restaurant.append({'Координаты': None})
-        return restaurants
-    return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.'
+
+        return restaurants, location_city
+    return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
 
 
-def output_restaurants(restaurants: Dict) -> Dict:
+def output_restaurants(restaurants):
     """
     Преобразуем данные по ресторанам в строковый тип и возвращаем данные по каждому ресторану
     :param restaurants: данные по ресторанам
     """
+    data_of_all_restaurants = list()
     for i_restaurant, i_data in restaurants.items():
         coordinates = None
         if i_restaurant is not None:
@@ -59,7 +63,8 @@ def output_restaurants(restaurants: Dict) -> Dict:
                     data_of_restaurant += f'{key}: {value}\n'
             if j_dict.get('Координаты'):
                 coordinates = j_dict.get('Координаты')
-        yield data_of_restaurant, coordinates
+        data_of_all_restaurants.append([data_of_restaurant, coordinates])
+    return data_of_all_restaurants
 
 
 X_RapidAPI_Key = SiteApiSettings().X_RapidAPI_Key.get_secret_value()
@@ -83,14 +88,25 @@ def nearest_restaurants(first_name: str, coordinates: tuple, distance_search: in
     url = "https://travel-advisor.p.rapidapi.com/restaurants/list-by-latlng"
     querystring = {"latitude": coordinates[0], "longitude": coordinates[1], "limit": count, "currency": "RUB",
                    "distance": distance_search, "open_now": "false", "lunit": "km", "lang": "ru_RU"}
-    response = requests.request("GET", url, headers=headers, params=querystring).json()
-    result_response = get_restaurants(response)
-    record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
-    if isinstance(result_response, str):
-        yield result_response, None
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    if response.status_code == 200:
+        response = response.json()
+        result_response, location_city = get_restaurants(response)
+        if location_city is not None:
+            record_location_city(location_city=location_city)
+        if isinstance(result_response, str):
+            record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
+            yield result_response, None
+        else:
+            data_of_all_restaurants = output_restaurants(result_response)
+            record_request(first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            for i_data in data_of_all_restaurants:
+                data_of_restaurant, coordinates = i_data
+                yield data_of_restaurant, coordinates
     else:
-        for i_date in output_restaurants(result_response):
-            yield i_date
+        err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
+        record_request(first_name=first_name, request=err, table=RequestsRestaurants)
+        yield err, None
 
 
 def search_restaurants(first_name: str, city: str, count: int):
@@ -102,12 +118,42 @@ def search_restaurants(first_name: str, city: str, count: int):
     :param count: количество выдаваемых результатов (максимум 30)
     :return:
     """
-    url = "https://travel-advisor.p.rapidapi.com/locations/search"
-    querystring = {"query": city, "limit": count, "offset": "0", "units": "km", "location_id": "1",
-                   "currency": "RUB", "sort": "relevance", "lang": "ru_RU"}
-    response = requests.request("GET", url, headers=headers, params=querystring).json()
-    record_request(first_name=first_name, request=response, table=RequestsRestaurants)
-    return response
+    location_id = read_location_city_from_db(city=city)
+    if not location_id:
+        url = "https://travel-advisor.p.rapidapi.com/locations/search"
+        querystring = {"query": city, "limit": "1", "offset": "0", "units": "km", "location_id": "1",
+                       "currency": "RUB", "sort": "relevance", "lang": "ru_RU"}
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        if response.status_code == 200:
+            response = response.json()
+            location_city = (response['data'][0]['result_object']['location_id'],
+                             response['data'][0]['result_object']['name'])
+            record_location_city(location_city=location_city)
+            location_id = location_city[0]
+        else:
+            yield 'Не удалось получить результаты, пожалуйста, повторите позднее.', None
+    url = "https://travel-advisor.p.rapidapi.com/restaurants/list"
+    querystring = {"location_id": location_id, "restaurant_tagcategory": "10591",
+                   "restaurant_tagcategory_standalone": "10591", "currency": "RUB", "lunit": "km", "limit": count,
+                   "open_now": "false", "lang": "ru_RU"}
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    if response.status_code == 200:
+        response = response.json()
+        result_response, location_city = get_restaurants(response)
+        if isinstance(result_response, str):
+            record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
+            yield result_response, None
+        else:
+            data_of_all_restaurants = output_restaurants(result_response)
+            record_request(first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            for i_data in data_of_all_restaurants:
+                data_of_restaurant, coordinates = i_data
+                yield data_of_restaurant, coordinates
+    else:
+        err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
+        record_request(first_name=first_name, request=err, table=RequestsRestaurants)
+        yield err, None
+
 
 # if __name__ == "__main__":
 #     with open('../restaurants.json', 'r', encoding='utf-8') as file:
@@ -123,3 +169,10 @@ def search_restaurants(first_name: str, city: str, count: int):
 #         str_data = data['data'][0]['name']
 #     with open('res.json', 'r', encoding='utf-8') as file:
 #         response = json.load(file)
+
+
+
+#     response = 1
+#     if response:
+#         with open('res.json', 'r', encoding='utf-8') as file:
+#             response = json.load(file)

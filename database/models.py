@@ -28,18 +28,6 @@ class Users(BaseModel):
     first_name = CharField(null=True)
 
 
-# class Requests(BaseModel):
-#     """
-#     Таблица для хранения данных о введенных командах пользователя
-#
-#     Attributes:
-#         user_id (int): id пользователя
-#         request (string): запрос пользователя
-#     """
-#     user_id = IntegerField(null=True)
-#     request = TextField(null=True)
-
-
 class RequestsHotels(BaseModel):
     """
     Таблица для хранения запросов по отелям
@@ -80,3 +68,15 @@ class RequestsAttractions(BaseModel):
     date = DateTimeField(null=True)
     user_id = IntegerField(null=True)
     request = TextField(null=True)
+
+
+class LocationId(BaseModel):
+    """
+    Таблица для хранения location_id городов
+
+    Attributes:
+        location_id (int): location_id города
+        city (str): наименование города
+    """
+    location_id = IntegerField(null=True)
+    city = TextField(null=True)
