@@ -20,13 +20,14 @@ def close_db():
     db.close()
 
 
-def check_user_db(first_name: str):
+def check_user_db(username: str, first_name: str):
     """
     Проверка наличия пользователя в базе данных
+    :param username: username пользователя
     :param first_name: имя пользователя
     :return: bool
     """
-    if Users.select(Users.first_name).where(Users.first_name == first_name):
+    if Users.select(Users.first_name).where(Users.username == username and Users.first_name == first_name):
         return Users.get(Users.first_name == first_name)
     return False
 
@@ -48,21 +49,23 @@ def record_user_db(username: str, first_name: str):
     :param username: username пользователя
     :param first_name: имя пользователя
     """
-    if not check_user_db(first_name):
+    if not check_user_db(username=username, first_name=first_name):
         date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         data_command = Users(date=date, username=username, first_name=first_name)
         data_command.save()
 
 
-def record_request(first_name, request, table, date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")):
+def record_request(username, first_name, request, table, date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")):
     """
     Запись данных в таблицу с запросами пользователя
+    :param username: username пользователя
     :param date: текущая дата
     :param table: таблица, в которую записывать данные
     :param first_name: имя пользователя
     :param request: запрос пользователя
     """
-    user_id = next(iter(Users.select(Users.id).where(Users.first_name == first_name)))
+    record_user_db(username, first_name)
+    user_id = next(iter(Users.select(Users.id).where(Users.username == username and Users.first_name == first_name)))
     table(date=date, user_id=user_id, request=json.dumps(request, ensure_ascii=False)).save()
 
 
@@ -88,21 +91,37 @@ def read_location_city_from_db(city):
     return False
 
 
-def read_data_of_restaurants(first_name, count=1):
+def read_data(username, first_name, category, count=1):
     """
     Получение данных по ресторанам из базы
+    :param username: username пользователя
+    :param category: категория
     :param first_name: имя пользователя
     :param count: количество записей
     """
-    user_id = check_user_db(first_name)
+    user_id = check_user_db(username=username, first_name=first_name)
     if user_id:
-        data = RequestsRestaurants.select().where(RequestsRestaurants.user_id == user_id).\
-            order_by(RequestsRestaurants.id.desc()).limit(count)
-        for i_data in data[::-1]:
-            i_data = json.loads(i_data.request)
-            if isinstance(i_data, str):
-                yield i_data, None
-            else:
-                for i_result in i_data:
-                    data_of_restaurant, coordinates = i_result
-                    yield data_of_restaurant, coordinates
+        if category == 'restaurants':
+            table = RequestsRestaurants
+        elif category == 'hotels':
+            table = RequestsHotels
+        elif category == 'places':
+            table = RequestsAttractions
+        else:
+            print(f'Неизвестная категория {category}')
+            return
+        data = table.select().where(table.user_id == user_id).\
+            order_by(table.id.desc()).limit(count)
+        if data:
+            for i_data in data[::-1]:
+                i_data = json.loads(i_data.request)
+                if isinstance(i_data, str):
+                    yield i_data, None
+                else:
+                    for i_result in i_data:
+                        data_of_category, coordinates = i_result
+                        yield data_of_category, coordinates
+        else:
+            yield 'Данные не обнаружены. Пожалуйста, сделайте первый запрос.', None
+    else:
+        yield 'Данные не обнаружены. Пожалуйста, сделайте первый запрос.', None

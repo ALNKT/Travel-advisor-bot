@@ -15,7 +15,7 @@ request_geo = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).
 button_restaurants = InlineKeyboardButton('Рестораны.', callback_data='restaurants')
 button_hotels = InlineKeyboardButton('Отели.', callback_data='hotels')
 button_places = InlineKeyboardButton('Достопримечательности.', callback_data='places')
-history_keyboard = InlineKeyboardMarkup().row(button_restaurants)
+history_keyboard = InlineKeyboardMarkup(row_width=1).add(button_restaurants, button_places)
 
 # клавиатура для ввода количества
 lst_buttons = [InlineKeyboardButton('1', callback_data='1'), InlineKeyboardButton('2', callback_data='2'),
@@ -37,3 +37,17 @@ restaurants_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboa
 # клавиатура подтверждения запроса на поиск ресторанов
 confirm_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).\
     add(KeyboardButton('Да, всё верно.'), KeyboardButton('Отмена'))
+
+
+# КЛАВИАТУРЫ ПО ДОСТОПРИМЕЧАТЕЛЬНОСТЯМ
+# клавиатура для ответа на поиск достопримечательностей
+nearest_places = InlineKeyboardButton('Хочу найти ближайшие места.', callback_data='nearest_places')
+specific_places = InlineKeyboardButton('Хочу найти места в конкретном городе.',
+                                       callback_data='specific_places')
+places_keyboard = InlineKeyboardMarkup(row_width=1).\
+    add(nearest_places, specific_places)
+
+# клавиатура подтверждения запроса на поиск достопримечательностей
+button_yes = InlineKeyboardButton('Да, все верно.', callback_data='confirm')
+button_no = InlineKeyboardButton('Отмена.', callback_data='cancel')
+yes_no_keyboard = InlineKeyboardMarkup(row_width=2).add(button_yes, button_no)

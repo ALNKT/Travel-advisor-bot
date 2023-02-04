@@ -18,7 +18,10 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
         restaurants = {}
         location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
         for i_restaurant in data['data']:
-            tmp_restaurant = restaurants[i_restaurant.get('name')] = []
+            if i_restaurant.get('name'):
+                tmp_restaurant = restaurants[i_restaurant.get('name')] = []
+            else:
+                continue
             if not i_restaurant.get('is_closed'):
                 tmp_restaurant.append({'Открыто': 'Да'})
             else:
@@ -53,7 +56,8 @@ def output_restaurants(restaurants):
         else:
             data_of_restaurant = f'Ресторан: Нет названия\n'
         for j_dict in i_data:
-            data = {key: value for key, value in j_dict.items() if value is not None and len(value) > 0 and key != 'Координаты'}
+            data = {key: value for key, value in j_dict.items() if value is not None and len(value) > 0
+                    and key != 'Координаты'}
             if j_dict.get('Кухня'):
                 cuisine = [i_cuisine['name'] for i_cuisine in j_dict.get('Кухня')]
                 data['Кухня'] = ', '.join(cuisine)
@@ -75,10 +79,11 @@ headers = {
 }
 
 
-def nearest_restaurants(first_name: str, coordinates: tuple, distance_search: int, count: int):
+def nearest_restaurants(username: str, first_name: str, coordinates: tuple, distance_search: int, count: int):
     """
     Поиск ресторанов по координатам (поблизости)
 
+    :param username: username пользователя
     :param first_name: имя пользователя
     :param coordinates: координаты пользователя
     :param distance_search: дистанция поиска (максимум 10 км)
@@ -94,24 +99,25 @@ def nearest_restaurants(first_name: str, coordinates: tuple, distance_search: in
         if location_city is not None:
             record_location_city(location_city=location_city)
         if isinstance(result_response, str):
-            record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
+            record_request(username=username, first_name=first_name, request=result_response, table=RequestsRestaurants)
             yield result_response, None
         else:
             data_of_all_restaurants = output_restaurants(result_response)
-            record_request(first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            record_request(username=username, first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
             for i_data in data_of_all_restaurants:
                 data_of_restaurant, coordinates = i_data
                 yield data_of_restaurant, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(first_name=first_name, request=err, table=RequestsRestaurants)
+        record_request(username=username, first_name=first_name, request=err, table=RequestsRestaurants)
         yield err, None
 
 
-def search_restaurants(first_name: str, city: str, count: int):
+def search_restaurants(username: str, first_name: str, city: str, count: int):
     """
     Поиск ресторанов по городу
 
+    :param username: username пользователя
     :param first_name: имя пользователя
     :param city: город
     :param count: количество выдаваемых результатов (максимум 30)
@@ -144,17 +150,17 @@ def search_restaurants(first_name: str, city: str, count: int):
         response = response.json()
         result_response, location_city = get_restaurants(response)
         if isinstance(result_response, str):
-            record_request(first_name=first_name, request=result_response, table=RequestsRestaurants)
+            record_request(username=username, first_name=first_name, request=result_response, table=RequestsRestaurants)
             yield result_response, None
         else:
             data_of_all_restaurants = output_restaurants(result_response)
-            record_request(first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            record_request(username=username, first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
             for i_data in data_of_all_restaurants:
                 data_of_restaurant, coordinates = i_data
                 yield data_of_restaurant, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(first_name=first_name, request=err, table=RequestsRestaurants)
+        record_request(username=username, first_name=first_name, request=err, table=RequestsRestaurants)
         yield err, None
 
 

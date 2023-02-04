@@ -1,6 +1,11 @@
+from aiogram import types, Dispatcher
+from aiogram.dispatcher import FSMContext
 from aiogram.types import ContentTypes, ReplyKeyboardRemove
 from site_API.restaurants import nearest_restaurants, search_restaurants
-from telegram_API.handlers.common import *
+from aiogram.dispatcher.filters.state import StatesGroup, State
+
+from telegram_API import keyboards
+from telegram_API.core_tg import dp
 
 
 class SearchRestaurants(StatesGroup):
@@ -120,8 +125,8 @@ async def confirmed_data(message: types.Message, state: FSMContext):
         distance_res = user_data['distance']
         await state.finish()
         await message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.', reply_markup=ReplyKeyboardRemove())
-        results = nearest_restaurants(first_name=message.from_user.first_name, coordinates=coordinates,
-                                      count=count_res, distance_search=distance_res)
+        results = nearest_restaurants(username=message.from_user.username, first_name=message.from_user.first_name,
+                                      coordinates=coordinates, count=count_res, distance_search=distance_res)
         for n, i_data in enumerate(results):
             restaurant_data = i_data[0]
             restaurant_coordinates = i_data[1]
@@ -134,7 +139,8 @@ async def confirmed_data(message: types.Message, state: FSMContext):
         count_res = user_data['count_results']
         await state.finish()
         await message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.', reply_markup=ReplyKeyboardRemove())
-        results = search_restaurants(first_name=message.from_user.first_name, city=city, count=count_res)
+        results = search_restaurants(username=message.from_user.username, first_name=message.from_user.first_name,
+                                     city=city, count=count_res)
         for n, i_data in enumerate(results):
             restaurant_data = i_data[0]
             restaurant_coordinates = i_data[1]
