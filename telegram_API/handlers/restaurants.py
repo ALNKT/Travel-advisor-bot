@@ -1,6 +1,8 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ContentTypes, ReplyKeyboardRemove
+
+from settings import logger_message
 from site_API.restaurants import nearest_restaurants, search_restaurants
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
@@ -24,6 +26,7 @@ async def start_search_restaurants(message: types.Message, state: FSMContext):
     :param state: статус
     :param message: сообщение от пользователя
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await message.answer('Я могу найти рестораны поблизости или в конкретном городе.',
                          reply_markup=keyboards.restaurants_keyboard)
     await state.set_state(SearchRestaurants.waiting_for_place_search.state)  # ожидаем ответа на сообщение (поблизости или город)
@@ -35,6 +38,7 @@ async def search_nearest_restaurants(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if message.text in 'Хочу найти ближайшие ко мне рестораны.':
         await message.answer('Мне нужно определить вашу геопозицию.', reply_markup=keyboards.request_geo)
         await state.set_state(SearchRestaurants.waiting_for_user_location.state)
@@ -51,6 +55,7 @@ async def request_city(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await state.update_data(city_for_search=message.text)
     await state.set_state(SearchRestaurants.waiting_for_count_results.state)
     await message.answer('Сколько результатов необходимо показать? Максимум, доступно 30 результатов.',
@@ -63,6 +68,7 @@ async def request_geo(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.location:
         await message.answer('Пожалуйста, отправьте вашу геопозицию, используя клавиатуру ниже.')
         return
@@ -77,6 +83,7 @@ async def distance(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.text.isdigit() or not 0 < int(message.text) <= 10:
         await message.answer('Пожалуйста, укажите корректные данные (от 1 до 10 включительно).')
         return
@@ -91,6 +98,7 @@ async def count_results(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.text.isdigit() or not 0 < int(message.text) <= 30:
         await message.answer('Пожалуйста, укажите корректные данные (от 1 до 30 включительно).')
         return
@@ -118,6 +126,7 @@ async def confirmed_data(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     user_data = await state.get_data()
     if 'coordinates' in user_data:
         coordinates = (user_data['coordinates']['latitude'], user_data['coordinates']['longitude'])

@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import ReplyKeyboardRemove, ContentTypes
 
+from settings import logger_message
 from site_API.places import nearest_places, search_places
 from telegram_API import keyboards
 from telegram_API.core_tg import dp
@@ -25,6 +26,7 @@ async def start_search_places(message: types.Message, state: FSMContext):
     :param state: статус
     :param message: сообщение от пользователя
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await message.answer('Я могу найти достопримечательности поблизости или в конкретном городе.',
                          reply_markup=keyboards.places_keyboard)
     await state.set_state(
@@ -35,6 +37,7 @@ async def button_nearest_specific(call: types.CallbackQuery, state: FSMContext):
     """
     Обработка результатов зоны поиска по местам
     """
+    logger_message.info(f'{call.from_user.first_name}: {call.data}')
     await state.update_data(zone=call.data)
     await call.message.edit_reply_markup(reply_markup=None)
     await call.answer()
@@ -53,6 +56,7 @@ async def request_city(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await state.update_data(city_for_search=message.text)
     await message.answer('Сколько результатов необходимо показать? Максимум, доступно 30 результатов.')
     await state.set_state(SearchPlaces.waiting_for_count_results.state)
@@ -64,6 +68,7 @@ async def request_geo(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.location:
         await message.answer('Пожалуйста, отправьте вашу геопозицию, используя клавиатуру ниже.')
         return
@@ -78,6 +83,7 @@ async def distance(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.text.isdigit() or not 0 < int(message.text) <= 25:
         await message.answer('Пожалуйста, укажите корректные данные (от 1 до 25 включительно).')
         return
@@ -92,6 +98,7 @@ async def count_results(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     if not message.text.isdigit() or not 0 < int(message.text) <= 30:
         await message.answer('Пожалуйста, укажите корректные данные (от 1 до 30 включительно).')
         return
@@ -117,6 +124,7 @@ async def confirm_button(call: types.CallbackQuery, state: FSMContext):
     """
     Подтверждение данных для запроса
     """
+    logger_message.info(f'{call.from_user.first_name}: {call.data}')
     await call.message.edit_reply_markup(reply_markup=None)
     await call.answer()
     user_data = await state.get_data()
