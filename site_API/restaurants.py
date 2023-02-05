@@ -4,7 +4,7 @@ import requests
 
 from database.CRUD import record_request, record_location_city, read_location_city_from_db
 from database.models import RequestsRestaurants
-from settings import SiteApiSettings
+from settings import SiteApiSettings, logger
 
 
 def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[str, Union[str, int, List[dict]]], str]:
@@ -14,33 +14,37 @@ def get_restaurants(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[
     :param data: данные
     :return: словарь с данными, если данные имеются, иначе строку
     """
-    if len(data['data']) > 0:
-        restaurants = {}
-        location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
-        for i_restaurant in data['data']:
-            if i_restaurant.get('name'):
-                tmp_restaurant = restaurants[i_restaurant.get('name')] = []
-            else:
-                continue
-            if not i_restaurant.get('is_closed'):
-                tmp_restaurant.append({'Открыто': 'Да'})
-            else:
-                tmp_restaurant.append({'Открыто': 'Нет'})
-            tmp_restaurant.append({'Рейтинг': i_restaurant.get('rating')})
-            tmp_restaurant.append({'Кухня': i_restaurant.get('cuisine')})
-            tmp_restaurant.append({'Расстояние': i_restaurant.get('distance_string')})
-            tmp_restaurant.append({'Адрес': i_restaurant.get('address')})
-            tmp_restaurant.append({'Телефон': i_restaurant.get('phone')})
-            tmp_restaurant.append({'Фото':
-                    i_restaurant.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
-            tmp_restaurant.append({'Сайт': i_restaurant.get('web_url')})
-            if i_restaurant.get('latitude') and i_restaurant.get('longitude'):
-                tmp_restaurant.append({'Координаты': (i_restaurant.get('latitude'), i_restaurant.get('longitude'))})
-            else:
-                tmp_restaurant.append({'Координаты': None})
+    try:
+        if len(data['data']) > 0:
+            restaurants = {}
+            location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
+            for i_restaurant in data['data']:
+                if i_restaurant.get('name'):
+                    tmp_restaurant = restaurants[i_restaurant.get('name')] = []
+                else:
+                    continue
+                if not i_restaurant.get('is_closed'):
+                    tmp_restaurant.append({'Открыто': 'Да'})
+                else:
+                    tmp_restaurant.append({'Открыто': 'Нет'})
+                tmp_restaurant.append({'Рейтинг': i_restaurant.get('rating')})
+                tmp_restaurant.append({'Кухня': i_restaurant.get('cuisine')})
+                tmp_restaurant.append({'Расстояние': i_restaurant.get('distance_string')})
+                tmp_restaurant.append({'Адрес': i_restaurant.get('address')})
+                tmp_restaurant.append({'Телефон': i_restaurant.get('phone')})
+                tmp_restaurant.append({'Фото':
+                        i_restaurant.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
+                tmp_restaurant.append({'Сайт': i_restaurant.get('web_url')})
+                if i_restaurant.get('latitude') and i_restaurant.get('longitude'):
+                    tmp_restaurant.append({'Координаты': (i_restaurant.get('latitude'), i_restaurant.get('longitude'))})
+                else:
+                    tmp_restaurant.append({'Координаты': None})
 
-        return restaurants, location_city
-    return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
+            return restaurants, location_city
+        return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
+    except KeyError:
+        logger.exception('произошла ошибка при получении данных о ресторанах:')
+        return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
 
 
 def output_restaurants(restaurants):
@@ -162,24 +166,3 @@ def search_restaurants(username: str, first_name: str, city: str, count: int):
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
         record_request(username=username, first_name=first_name, request=err, table=RequestsRestaurants)
         yield err, None
-
-
-# if __name__ == "__main__":
-#     with open('../restaurants.json', 'r', encoding='utf-8') as file:
-#         data = json.load(file)
-#         print(data)
-#         name = data['data'][0]['name']
-#         photo = InputFile(data['data'][0]['photo']['images']['medium']['url'])
-#         distance = data['data'][0]['distance_string']
-#         phone = data['data'][0]['phone']
-#         address = data['data'][0]['address']
-#         print(name, photo, distance, phone, address)
-#
-#         str_data = data['data'][0]['name']
-#     with open('res.json', 'r', encoding='utf-8') as file:
-#         response = json.load(file)
-
-#     response = 1
-#     if response:
-#         with open('res.json', 'r', encoding='utf-8') as file:
-#             response = json.load(file)

@@ -3,8 +3,9 @@ from typing import Dict, Union, List
 import requests
 
 from database.CRUD import record_location_city, record_request, read_location_city_from_db
-from settings import SiteApiSettings
+from settings import SiteApiSettings, logger
 from database.models import RequestsAttractions
+
 
 X_RapidAPI_Key = SiteApiSettings().X_RapidAPI_Key.get_secret_value()
 X_RapidAPI_Host = SiteApiSettings().X_RapidAPI_Host.get_secret_value()
@@ -22,35 +23,39 @@ def get_places(data: Dict[str, Union[str, int, List[dict]]]) -> Union[Dict[str, 
     :param data: данные
     :return: словарь с данными, если данные имеются, иначе строку
     """
-    if len(data['data']) > 0:
-        places = {}
-        location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
-        for i_place in data['data']:
-            if i_place.get('name'):
-                tmp_place = places[i_place.get('name')] = []
-            else:
-                continue
-            if i_place.get('subcategory'):
-                tmp_place.append({'Категория': i_place.get('subcategory')[0].get('name')})
-            if not i_place.get('is_closed'):
-                tmp_place.append({'Открыто': 'Да'})
-            else:
-                tmp_place.append({'Открыто': 'Нет'})
-            tmp_place.append({'Рейтинг': i_place.get('rating')})
-            tmp_place.append({'Описание': i_place.get('description')})
-            tmp_place.append({'Расстояние': i_place.get('distance_string')})
-            tmp_place.append({'Адрес': i_place.get('address')})
-            tmp_place.append({'Телефон': i_place.get('phone')})
-            tmp_place.append({'Фото':
-                            i_place.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
-            tmp_place.append({'Сайт': i_place.get('web_url')})
-            if i_place.get('latitude') and i_place.get('longitude'):
-                tmp_place.append({'Координаты': (i_place.get('latitude'), i_place.get('longitude'))})
-            else:
-                tmp_place.append({'Координаты': None})
+    try:
+        if len(data['data']) > 0:
+            places = {}
+            location_city = [data['data'][0].get('ranking_geo_id'), data['data'][0].get('ranking_geo')]
+            for i_place in data['data']:
+                if i_place.get('name'):
+                    tmp_place = places[i_place.get('name')] = []
+                else:
+                    continue
+                if i_place.get('subcategory'):
+                    tmp_place.append({'Категория': i_place.get('subcategory')[0].get('name')})
+                if not i_place.get('is_closed'):
+                    tmp_place.append({'Открыто': 'Да'})
+                else:
+                    tmp_place.append({'Открыто': 'Нет'})
+                tmp_place.append({'Рейтинг': i_place.get('rating')})
+                tmp_place.append({'Описание': i_place.get('description')})
+                tmp_place.append({'Расстояние': i_place.get('distance_string')})
+                tmp_place.append({'Адрес': i_place.get('address')})
+                tmp_place.append({'Телефон': i_place.get('phone')})
+                tmp_place.append({'Фото':
+                                i_place.get('photo', dict()).get('images', dict()).get('medium', dict()).get('url')})
+                tmp_place.append({'Сайт': i_place.get('web_url')})
+                if i_place.get('latitude') and i_place.get('longitude'):
+                    tmp_place.append({'Координаты': (i_place.get('latitude'), i_place.get('longitude'))})
+                else:
+                    tmp_place.append({'Координаты': None})
 
-        return places, location_city
-    return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
+            return places, location_city
+        return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
+    except KeyError:
+        logger.exception('произошла ошибка при получении данных о достопримечательностях:')
+        return 'Данные по запросу отсутствуют. Пожалуйста, попробуйте изменить параметры запроса.', None
 
 
 def output_places(places):

@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from database.CRUD import record_user_db, read_data
+from settings import logger_message
 from telegram_API import keyboards
 from telegram_API.core_tg import dp
 from telegram_API.handlers.places import output_data
@@ -21,6 +22,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     :param message: сообщение
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await state.finish()
     await message.answer("Действие отменено", reply_markup=types.ReplyKeyboardRemove())
 
@@ -31,6 +33,7 @@ async def cmd_start(message: types.Message):
     :param message: сообщение
     """
     record_user_db(username=message.from_user.username, first_name=message.from_user.first_name)
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     text_message = greeting_text.format(name=message.from_user.first_name)
     await message.answer(text_message, reply_markup=keyboards.hello_keyboard)  # пользователь выбирает кнопку (Да, Нет)
 
@@ -39,6 +42,7 @@ async def processing_button_yes_no(call: types.CallbackQuery):
     """
     Обработка кнопок "Да" и "Нет"
     """
+    logger_message.info(f'{call.from_user.first_name}: {call.data}')
     if call.data == 'yes':
         await call.message.answer(text=f'Отлично, давай я тебе расскажу обо всем...\n{help_text}')
     elif call.data == 'no':
@@ -53,6 +57,7 @@ async def cmd_history(message: types.Message, state: FSMContext):
     :param message: сообщение
     :param state: статус
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await message.answer('По результатам каких запросов, вы хотите просмотреть историю?',
                          reply_markup=keyboards.history_keyboard)
     await state.set_state(SearchAll.waiting_for_category.state)
@@ -62,6 +67,7 @@ async def processing_history_keyboard(call: types.CallbackQuery, state: FSMConte
     """
     Обработка кнопок "Просмотреть историю"
     """
+    logger_message.info(f'{call.from_user.first_name}: {call.data}')
     await state.update_data(category=call.data)
     await call.message.edit_reply_markup(reply_markup=None)
     await call.message.answer(text=f'Сколько результатов вывести?', reply_markup=keyboards.count_keyboard)
@@ -72,6 +78,7 @@ async def processing_count_keyboard(call: types.CallbackQuery, state: FSMContext
     """
     Обработка количества результатов
     """
+    logger_message.info(f'{call.from_user.first_name}: {call.data}')
     await state.update_data(count=call.data)
     user_data = await state.get_data()
     await state.finish()
@@ -88,6 +95,7 @@ async def cmd_help(message: types.Message):
     Выводит справку по возможностям бота
     :param message: сообщение
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await message.answer(help_text)
 
 
@@ -96,6 +104,7 @@ async def cmd_location(message: types.Message):
     Отображает текущую геопозицию пользователя
     :param message: сообщение
     """
+    logger_message.info(f'{message.from_user.first_name}: {message.text}')
     await message.answer('Показать геопозицию?', reply_markup=keyboards.request_geo)
 
 

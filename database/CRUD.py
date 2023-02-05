@@ -2,6 +2,7 @@ import datetime
 import json
 
 from database.models import db, Users, RequestsHotels, RequestsRestaurants, RequestsAttractions, LocationId
+from settings import logger
 
 
 def init_db():
@@ -74,9 +75,12 @@ def record_location_city(location_city):
     Запись location_id города в базу данных
     :param location_city: location_id города
     """
-    location_id, city = location_city[0], location_city[1].lower()
-    if not check_city_db(city):
-        LocationId(location_id=location_id, city=city).save()
+    try:
+        location_id, city = location_city[0], location_city[1].lower()
+        if not check_city_db(city):
+            LocationId(location_id=location_id, city=city).save()
+    except AttributeError:
+        logger.exception('произошла ошибка при записи данных о населенном пункте:')
 
 
 def read_location_city_from_db(city):
