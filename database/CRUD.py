@@ -21,16 +21,17 @@ def close_db():
     db.close()
 
 
-def check_user_db(username: str, first_name: str):
+def check_user_db(user):
     """
     Проверка наличия пользователя в базе данных
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: username пользователя
     :return: bool
     """
-    if Users.select(Users.first_name).where(Users.username == username and Users.first_name == first_name):
-        return Users.get(Users.first_name == first_name)
-    return False
+    user_id, username, first_name = user
+    if Users.select(Users.user_id_tg).where(Users.user_id_tg == user_id):
+        return Users.get(Users.user_id_tg == user_id)
+    record_user_db(user=user)
+    return Users.get(Users.user_id_tg == user_id)
 
 
 def check_city_db(city: str):
@@ -44,29 +45,26 @@ def check_city_db(city: str):
     return False
 
 
-def record_user_db(username: str, first_name: str):
+def record_user_db(user):
     """
     Занесение пользователя в базу данных. Предварительно проверяем его наличие в таблице
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: данные пользователя
     """
-    if not check_user_db(username=username, first_name=first_name):
-        date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-        data_command = Users(date=date, username=username, first_name=first_name)
-        data_command.save()
+    user_id, username, first_name = user
+    date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+    data_command = Users(date=date, user_id_tg=user_id, username=username, first_name=first_name)
+    data_command.save()
 
 
-def record_request(username, first_name, request, table, date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")):
+def record_request(user, request, table, date=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")):
     """
     Запись данных в таблицу с запросами пользователя
-    :param username: username пользователя
+    :param user: данные пользователя
     :param date: текущая дата
     :param table: таблица, в которую записывать данные
-    :param first_name: имя пользователя
     :param request: запрос пользователя
     """
-    record_user_db(username, first_name)
-    user_id = next(iter(Users.select(Users.id).where(Users.username == username and Users.first_name == first_name)))
+    user_id = check_user_db(user=user)
     table(date=date, user_id=user_id, request=json.dumps(request, ensure_ascii=False)).save()
 
 
@@ -95,15 +93,14 @@ def read_location_city_from_db(city):
     return False
 
 
-def read_data(username, first_name, category, count=1):
+def read_data(user, category, count=1):
     """
-    Получение данных по ресторанам из базы
-    :param username: username пользователя
+    Получение данных из базы
+    :param user: данные пользователя
     :param category: категория
-    :param first_name: имя пользователя
     :param count: количество записей
     """
-    user_id = check_user_db(username=username, first_name=first_name)
+    user_id = check_user_db(user)
     if user_id:
         if category == 'restaurants':
             table = RequestsRestaurants

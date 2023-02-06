@@ -7,7 +7,6 @@ from aiogram.types import ReplyKeyboardRemove, ContentTypes
 from settings import logger_message
 from site_API.places import nearest_places, search_places
 from telegram_API import keyboards
-from telegram_API.core_tg import dp
 
 
 class SearchPlaces(StatesGroup):
@@ -105,10 +104,10 @@ async def count_results(message: types.Message, state: FSMContext):
     await state.update_data(count_results=int(message.text))
     user_data = await state.get_data()
     if 'coordinates' in user_data:
-        coordinates = (user_data['coordinates']['latitude'], user_data['coordinates']['longitude'])
+        coordinates = (str(user_data['coordinates']['latitude']), str(user_data['coordinates']['longitude']))
         count_res = user_data['count_results']
         distance_res = user_data['distance']
-        await message.answer(f'Вы указали:\nКоординаты: {coordinates}\nКоличество результатов: {count_res}\n'
+        await message.answer(f'Вы указали:\nКоординаты: {", ".join(coordinates)}\nКоличество результатов: {count_res}\n'
                              f'Удаленность поиска: {distance_res} км.\nВсё верно?',
                              reply_markup=keyboards.yes_no_keyboard)
         await state.set_state(SearchPlaces.waiting_for_confirm_nearest.state)
@@ -129,6 +128,7 @@ async def confirm_button(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     user_data = await state.get_data()
     await state.finish()
+    user = [call.message.chat.id, call.message.chat.username, call.message.chat.first_name]
     if call.data == 'confirm':
         if 'coordinates' in user_data:
             coordinates = (user_data['coordinates']['latitude'], user_data['coordinates']['longitude'])
@@ -136,8 +136,7 @@ async def confirm_button(call: types.CallbackQuery, state: FSMContext):
             distance_res = user_data['distance']
             await call.message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.',
                                       reply_markup=ReplyKeyboardRemove())
-            results = nearest_places(username=call.message.chat.username, first_name=call.message.chat.first_name,
-                                     coordinates=coordinates, count=count_res, distance_search=distance_res)
+            results = nearest_places(user=user, coordinates=coordinates, count=count_res, distance_search=distance_res)
             await output_data(call, results)
         else:
             city = user_data['city_for_search']
@@ -145,8 +144,7 @@ async def confirm_button(call: types.CallbackQuery, state: FSMContext):
             await state.finish()
             await call.message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.',
                                       reply_markup=ReplyKeyboardRemove())
-            results = search_places(username=call.message.chat.username, first_name=call.message.chat.first_name,
-                                    city=city, count=count_res)
+            results = search_places(user=user, city=city, count=count_res)
             await output_data(call, results)
 
     else:
@@ -176,7 +174,7 @@ def register_handlers_search_places(dps: Dispatcher):
     dps.register_message_handler(request_city, state=SearchPlaces.waiting_for_city)
 
 
-def register_callbacks(dps: Dispatcher):
+def register_callbacks_places(dps: Dispatcher):
     """
     Регистрация коллбэков
     :param dps: диспетчер
@@ -186,7 +184,3 @@ def register_callbacks(dps: Dispatcher):
     dps.register_callback_query_handler(confirm_button, Text(['confirm', 'cancel']),
                                         state=[SearchPlaces.waiting_for_confirm_city,
                                                SearchPlaces.waiting_for_confirm_nearest])
-
-
-register_handlers_search_places(dp)
-register_callbacks(dp)

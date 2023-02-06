@@ -3,11 +3,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
-from database.CRUD import record_user_db, read_data
+from database.CRUD import check_user_db, read_data
 from settings import logger_message
 from telegram_API import keyboards
-from telegram_API.core_tg import dp
 from telegram_API.handlers.places import output_data
+
 from telegram_API.texts import greeting_text, help_text
 
 
@@ -32,7 +32,8 @@ async def cmd_start(message: types.Message):
     Приветствие пользователя
     :param message: сообщение
     """
-    record_user_db(username=message.from_user.username, first_name=message.from_user.first_name)
+    user = [message.from_user.id, message.from_user.username, message.from_user.first_name]
+    check_user_db(user=user)
     logger_message.info(f'{message.from_user.first_name}: {message.text}')
     text_message = greeting_text.format(name=message.from_user.first_name)
     await message.answer(text_message, reply_markup=keyboards.hello_keyboard)  # пользователь выбирает кнопку (Да, Нет)
@@ -78,6 +79,7 @@ async def processing_count_keyboard(call: types.CallbackQuery, state: FSMContext
     """
     Обработка количества результатов
     """
+    user = [call.message.chat.id, call.message.chat.username, call.message.chat.first_name]
     logger_message.info(f'{call.from_user.first_name}: {call.data}')
     await state.update_data(count=call.data)
     user_data = await state.get_data()
@@ -85,8 +87,7 @@ async def processing_count_keyboard(call: types.CallbackQuery, state: FSMContext
     await call.message.answer(text=f'Подождите, обрабатываю ваш запрос.')
     await call.message.edit_reply_markup(reply_markup=None)
     category, count = user_data['category'], int(user_data['count'])
-    results = read_data(username=call.from_user.username, first_name=call.from_user.first_name,
-                        category=category, count=count)
+    results = read_data(user=user, category=category, count=count)
     await output_data(call, results)
 
 
@@ -123,14 +124,14 @@ def register_handlers_common(dps: Dispatcher):
     """
     dps.register_message_handler(cmd_start, commands="start", state="*")
     dps.register_message_handler(cmd_help, commands="help", state="*")
-    dps.register_message_handler(cmd_cancel, Text(equals=["отмена", "cancel"], ignore_case=True), state="*")
+    dps.register_message_handler(cmd_cancel, Text(equals="cancel", ignore_case=True), state="*")
+    dps.register_message_handler(cmd_cancel, Text(equals="отмена", ignore_case=True), state="*")
     dps.register_message_handler(cmd_cancel, commands="cancel", state="*")
     dps.register_message_handler(cmd_history, commands="history", state="*")
     dps.register_message_handler(cmd_location, commands="mylocation", state="*")
-    dps.register_message_handler(other_message, state="*")
 
 
-def register_callbacks(dps: Dispatcher):
+def register_callbacks_common(dps: Dispatcher):
     """
     Регистрация коллбэков
     :param dps: диспетчер
@@ -141,7 +142,3 @@ def register_callbacks(dps: Dispatcher):
     dps.register_callback_query_handler(processing_count_keyboard,
                                         Text(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']),
                                         state=SearchAll.waiting_for_count)
-
-
-register_handlers_common(dp)
-register_callbacks(dp)

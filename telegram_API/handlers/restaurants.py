@@ -7,7 +7,6 @@ from site_API.restaurants import nearest_restaurants, search_restaurants
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from telegram_API import keyboards
-from telegram_API.core_tg import dp
 
 
 class SearchRestaurants(StatesGroup):
@@ -105,11 +104,11 @@ async def count_results(message: types.Message, state: FSMContext):
     await state.update_data(count_results=int(message.text))
     user_data = await state.get_data()
     if 'coordinates' in user_data:
-        coordinates = (user_data['coordinates']['latitude'], user_data['coordinates']['longitude'])
+        coordinates = [str(user_data['coordinates']['latitude']), str(user_data['coordinates']['longitude'])]
         count_res = user_data['count_results']
         distance_res = user_data['distance']
         await state.set_state(SearchRestaurants.waiting_for_confirm_nearest.state)
-        await message.answer(f'Вы указали:\nКоординаты: {coordinates}\nКоличество результатов: {count_res}\n'
+        await message.answer(f'Вы указали:\nКоординаты: {", ".join(coordinates)}\nКоличество результатов: {count_res}\n'
                              f'Удаленность поиска: {distance_res} км.\nВсё верно?',
                              reply_markup=keyboards.confirm_keyboard)
     else:
@@ -126,16 +125,17 @@ async def confirmed_data(message: types.Message, state: FSMContext):
     :param message: сообщение от пользователя
     :param state: статус
     """
+    user = [message.from_user.id, message.from_user.username, message.from_user.first_name]
     logger_message.info(f'{message.from_user.first_name}: {message.text}')
     user_data = await state.get_data()
+    await state.finish()
     if 'coordinates' in user_data:
         coordinates = (user_data['coordinates']['latitude'], user_data['coordinates']['longitude'])
         count_res = user_data['count_results']
         distance_res = user_data['distance']
         await state.finish()
         await message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.', reply_markup=ReplyKeyboardRemove())
-        results = nearest_restaurants(username=message.from_user.username, first_name=message.from_user.first_name,
-                                      coordinates=coordinates, count=count_res, distance_search=distance_res)
+        results = nearest_restaurants(user=user, coordinates=coordinates, count=count_res, distance_search=distance_res)
         for n, i_data in enumerate(results):
             restaurant_data = i_data[0]
             restaurant_coordinates = i_data[1]
@@ -148,8 +148,7 @@ async def confirmed_data(message: types.Message, state: FSMContext):
         count_res = user_data['count_results']
         await state.finish()
         await message.answer('Пожалуйста, подождите, обрабатываю ваш запрос.', reply_markup=ReplyKeyboardRemove())
-        results = search_restaurants(username=message.from_user.username, first_name=message.from_user.first_name,
-                                     city=city, count=count_res)
+        results = search_restaurants(user=user, city=city, count=count_res)
         for n, i_data in enumerate(results):
             restaurant_data = i_data[0]
             restaurant_coordinates = i_data[1]
@@ -172,6 +171,3 @@ def register_handlers_search_restaurants(dps: Dispatcher):
     dps.register_message_handler(request_city, state=SearchRestaurants.waiting_for_city)
     dps.register_message_handler(confirmed_data, state=[SearchRestaurants.waiting_for_confirm_nearest,
                                  SearchRestaurants.waiting_for_confirm_city])
-
-
-register_handlers_search_restaurants(dp)

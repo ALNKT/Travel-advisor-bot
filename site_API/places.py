@@ -82,12 +82,11 @@ def output_places(places):
     return data_of_all_places
 
 
-def nearest_places(username, first_name: str, coordinates: tuple, distance_search: int, count: int):
+def nearest_places(user: List, coordinates: tuple, distance_search: int, count: int):
     """
     Поиск мест по координатам (поблизости)
 
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: данные пользователя
     :param coordinates: координаты пользователя
     :param distance_search: дистанция поиска (максимум 10 км)
     :param count: количество выдаваемых результатов (максимум 30)
@@ -96,7 +95,6 @@ def nearest_places(username, first_name: str, coordinates: tuple, distance_searc
     url = "https://travel-advisor.p.rapidapi.com/attractions/list-by-latlng"
     querystring = {"longitude": longitude, "latitude": latitude, "lunit": "km", "currency": "RUB", "limit": count,
                    "distance": distance_search, "lang": "ru_RU"}
-
     response = requests.request("GET", url, headers=headers, params=querystring)
     if response.status_code == 200:
         response = response.json()
@@ -104,26 +102,25 @@ def nearest_places(username, first_name: str, coordinates: tuple, distance_searc
         if location_city is not None:
             record_location_city(location_city=location_city)
         if isinstance(result_response, str):
-            record_request(username=username, first_name=first_name, request=result_response, table=RequestsAttractions)
+            record_request(user=user, request=result_response, table=RequestsAttractions)
             yield result_response, None
         else:
             data_of_all_places = output_places(result_response)
-            record_request(username=username, first_name=first_name, request=data_of_all_places, table=RequestsAttractions)
+            record_request(user=user, request=data_of_all_places, table=RequestsAttractions)
             for i_data in data_of_all_places:
                 data_of_place, coordinates = i_data
                 yield data_of_place, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(username=username, first_name=first_name, request=err, table=RequestsAttractions)
+        record_request(user=user, request=err, table=RequestsAttractions)
         yield err, None
 
 
-def search_places(username: str, first_name: str, city: str, count: int):
+def search_places(user: List, city: str, count: int):
     """
     Поиск мест по городу
 
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: данные пользователя
     :param city: город
     :param count: количество выдаваемых результатов (максимум 30)
     :return:
@@ -154,15 +151,15 @@ def search_places(username: str, first_name: str, city: str, count: int):
         response = response.json()
         result_response, location_city = get_places(response)
         if isinstance(result_response, str):
-            record_request(username=username, first_name=first_name, request=result_response, table=RequestsAttractions)
+            record_request(user=user, request=result_response, table=RequestsAttractions)
             yield result_response, None
         else:
             data_of_all_restaurants = output_places(result_response)
-            record_request(username=username, first_name=first_name, request=data_of_all_restaurants, table=RequestsAttractions)
+            record_request(user=user, request=data_of_all_restaurants, table=RequestsAttractions)
             for i_data in data_of_all_restaurants:
                 data_of_restaurant, coordinates = i_data
                 yield data_of_restaurant, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(username=username, first_name=first_name, request=err, table=RequestsAttractions)
+        record_request(user=user, request=err, table=RequestsAttractions)
         yield err, None

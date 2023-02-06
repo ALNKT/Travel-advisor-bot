@@ -83,12 +83,11 @@ headers = {
 }
 
 
-def nearest_restaurants(username: str, first_name: str, coordinates: tuple, distance_search: int, count: int):
+def nearest_restaurants(user: str, coordinates: tuple, distance_search: int, count: int):
     """
     Поиск ресторанов по координатам (поблизости)
 
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: данные пользователя
     :param coordinates: координаты пользователя
     :param distance_search: дистанция поиска (максимум 10 км)
     :param count: количество выдаваемых результатов (максимум 30)
@@ -103,26 +102,25 @@ def nearest_restaurants(username: str, first_name: str, coordinates: tuple, dist
         if location_city is not None:
             record_location_city(location_city=location_city)
         if isinstance(result_response, str):
-            record_request(username=username, first_name=first_name, request=result_response, table=RequestsRestaurants)
+            record_request(user=user, request=result_response, table=RequestsRestaurants)
             yield result_response, None
         else:
             data_of_all_restaurants = output_restaurants(result_response)
-            record_request(username=username, first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            record_request(user=user, request=data_of_all_restaurants, table=RequestsRestaurants)
             for i_data in data_of_all_restaurants:
                 data_of_restaurant, coordinates = i_data
                 yield data_of_restaurant, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(username=username, first_name=first_name, request=err, table=RequestsRestaurants)
+        record_request(user=user, request=err, table=RequestsRestaurants)
         yield err, None
 
 
-def search_restaurants(username: str, first_name: str, city: str, count: int):
+def search_restaurants(user: str, city: str, count: int):
     """
     Поиск ресторанов по городу
 
-    :param username: username пользователя
-    :param first_name: имя пользователя
+    :param user: данные пользователя
     :param city: город
     :param count: количество выдаваемых результатов (максимум 30)
     :return:
@@ -154,15 +152,15 @@ def search_restaurants(username: str, first_name: str, city: str, count: int):
         response = response.json()
         result_response, location_city = get_restaurants(response)
         if isinstance(result_response, str):
-            record_request(username=username, first_name=first_name, request=result_response, table=RequestsRestaurants)
+            record_request(user=user, request=result_response, table=RequestsRestaurants)
             yield result_response, None
         else:
             data_of_all_restaurants = output_restaurants(result_response)
-            record_request(username=username, first_name=first_name, request=data_of_all_restaurants, table=RequestsRestaurants)
+            record_request(user=user, request=data_of_all_restaurants, table=RequestsRestaurants)
             for i_data in data_of_all_restaurants:
                 data_of_restaurant, coordinates = i_data
                 yield data_of_restaurant, coordinates
     else:
         err = 'Не удалось получить результаты, пожалуйста, повторите позднее.'
-        record_request(username=username, first_name=first_name, request=err, table=RequestsRestaurants)
+        record_request(user=user, request=err, table=RequestsRestaurants)
         yield err, None

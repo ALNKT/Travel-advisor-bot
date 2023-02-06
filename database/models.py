@@ -24,6 +24,7 @@ class Users(BaseModel):
         first_name (string): имя пользователя
     """
     date = DateTimeField(null=True)
+    user_id_tg = IntegerField(null=True)
     username = CharField(null=True)
     first_name = CharField(null=True)
 

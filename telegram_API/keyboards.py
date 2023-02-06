@@ -15,7 +15,7 @@ request_geo = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).
 button_restaurants = InlineKeyboardButton('Рестораны.', callback_data='restaurants')
 button_hotels = InlineKeyboardButton('Отели.', callback_data='hotels')
 button_places = InlineKeyboardButton('Достопримечательности.', callback_data='places')
-history_keyboard = InlineKeyboardMarkup(row_width=1).add(button_restaurants, button_places)
+history_keyboard = InlineKeyboardMarkup(row_width=1).add(button_hotels, button_restaurants, button_places)
 
 # клавиатура для ввода количества
 lst_buttons = [InlineKeyboardButton('1', callback_data='1'), InlineKeyboardButton('2', callback_data='2'),
@@ -51,3 +51,27 @@ places_keyboard = InlineKeyboardMarkup(row_width=1).\
 button_yes = InlineKeyboardButton('Да, все верно.', callback_data='confirm')
 button_no = InlineKeyboardButton('Отмена.', callback_data='cancel')
 yes_no_keyboard = InlineKeyboardMarkup(row_width=2).add(button_yes, button_no)
+
+
+# КЛАВИАТУРЫ ПО ОТЕЛЯМ
+# клавиатура для ответа на поиск отелей
+nearest_hotels = InlineKeyboardButton('Хочу найти ближайшие отели.', callback_data='nearest_hotels')
+specific_hotels = InlineKeyboardButton('Хочу найти отели в конкретном городе.',
+                                       callback_data='specific_hotels')
+hotels_keyboard = InlineKeyboardMarkup(row_width=1).\
+    add(nearest_hotels, specific_hotels)
+
+# клавиатура подтверждения запроса на поиск отелей
+button_yes = InlineKeyboardButton('Да, все верно.', callback_data='confirm_hotels')
+button_no = InlineKeyboardButton('Отмена.', callback_data='cancel')
+yes_no_keyboard_hotels = InlineKeyboardMarkup(row_width=2).add(button_yes, button_no)
+
+# календарь
+calendar_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+calendar_keyboard.row('Открыть календарь.')
+
+# выбор условий поиска по цене
+button_price_range = InlineKeyboardButton('Найти отели по диапазону цен.', callback_data='price_range')
+button_min_price = InlineKeyboardButton('Найти отели по минимальной цене.', callback_data='min_price')
+button_max_price = InlineKeyboardButton('Найти отели по максимальной цене.', callback_data='max_price')
+keyboard_hotels_price = InlineKeyboardMarkup(row_width=1).add(button_price_range, button_min_price, button_max_price)

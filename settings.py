@@ -18,3 +18,6 @@ class SiteApiSettings(BaseSettings):
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger()
 logger_message = logging.getLogger('message')
+
+# курс доллара
+USD = 71.58
