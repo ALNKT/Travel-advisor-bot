@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-# from time import sleep
 
 import requests
 
@@ -56,8 +55,6 @@ def nearest_hotels(user, data):
     response = requests.request("GET", url, headers=headers, params=querystring)
     if response.status_code == 200:
         response = response.json()
-        # with open('all_hotels.json', 'w', encoding='utf-8') as file:  # запись в файл
-        #     json.dump(response, file, indent=4, ensure_ascii=False)
         if len(response.get('data', [])) > 0:
             try:
                 location_city = [response['data'][0].get('ranking_geo_id'), response['data'][0].get('ranking_geo')]
@@ -94,7 +91,6 @@ def check_data(data):
         price_min, price_max = data.get('min_price'), 0
     else:
         price_min, price_max = 0, data.get('max_price')
-    # price_min, price_max = float(price_min) // USD, float(price_max) // USD
     checkin = datetime.strptime(data.get('checkin'), '%d-%m-%Y').strftime('%Y-%m-%d')
     nights = data.get('nights')
     rooms = data.get('rooms')
@@ -207,7 +203,6 @@ def get_details_of_hotels(location_id_hotels, checkin, adults, child_rm_ages, ni
         querystring.pop('child_rm_ages')
     for i_location_id_hotel in location_id_hotels:
         querystring.update({"location_id": i_location_id_hotel})
-        # sleep(2)
         response = requests.request("GET", url, headers=headers, params=querystring)
         if response.status_code == 200:
             response = response.json()

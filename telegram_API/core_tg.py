@@ -16,7 +16,6 @@ storage = JSONStorage('JSONStorage.json')
 bot = Bot(token=bot_token)
 dp = Dispatcher(bot, storage=storage)
 
-# регистрируем все обработчики в нужном порядке
 register_handlers_common(dp)
 register_callbacks_common(dp)
 register_handlers_search_hotels(dp)
@@ -24,4 +23,4 @@ register_callbacks_hotels(dp)
 register_handlers_search_places(dp)
 register_callbacks_places(dp)
 register_handlers_search_restaurants(dp)
-dp.register_message_handler(other_message, state='*')  # в последнюю очередь регистрируем обработчик обычных сообщений
+dp.register_message_handler(other_message, state='*')
